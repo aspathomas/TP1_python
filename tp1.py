@@ -8,6 +8,17 @@ from mpl_toolkits.mplot3d import Axes3D
 from sklearn.cluster import KMeans
 from R_square_clustering import r_square
 from purity import purity_score
+from sklearn.dummy import DummyClassifier
+from sklearn.naive_bayes import GaussianNB
+from sklearn import tree
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import confusion_matrix
+from sklearn.model_selection import train_test_split
+from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import cross_val_score
+from sklearn import tree
+
 
 
 # Turn interactive plotting off
@@ -209,80 +220,67 @@ elif int(question) == 3:
 
 #########################################################################
 # 4 - Classement
+elif int(question) == 4:
 
-# from sklearn.dummy import DummyClassifier
-# from sklearn.naive_bayes import GaussianNB
-# from sklearn import tree
-# from sklearn.ensemble import RandomForestClassifier
-# from sklearn.linear_model import LogisticRegression
-# from sklearn.metrics import confusion_matrix
+    feature_names = ['mass', 'width', 'height', 'color_score']
+    X = fruits[feature_names]
+    y = fruits['fruit_label']
 
+    X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=0)
 
-# # Create Training and Test Sets and Apply Scaling
-# # by default test data represents 25%
-# from sklearn.model_selection import train_test_split
-# X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=0)
+    # Initialize MinMaxScaler
+    scaler = MinMaxScaler()
 
-# # Normalize data
-# from sklearn.preprocessing import MinMaxScaler
-# scaler = MinMaxScaler()
-# # TODO
-# X_train = 
-# X_test = 
+    # Fit and transform the training data
+    X_train_norm = scaler.fit_transform(X_train)
 
+    # Transform the test data using the same scaler
+    X_test_norm = scaler.transform(X_test)
 
-# dummycl = DummyClassifier(strategy="most_frequent")
-# gmb = GaussianNB()
-# dectree = tree.DecisionTreeClassifier()
-# rdforest = RandomForestClassifier()
-# logreg = LogisticRegression()
+    dummycl = DummyClassifier(strategy="most_frequent")
+    gmb = GaussianNB()
+    dectree = tree.DecisionTreeClassifier()
+    rdforest = RandomForestClassifier()
+    logreg = LogisticRegression()
 
-# lst_classif = [dummycl, gmb, dectree, rdforest, logreg]
-# lst_classif_names = ['Dummy', 'Naive Bayes', 'Decision tree', 'Random Forest', 'Logistic regression']
+    lst_classif = [dummycl, gmb, dectree, rdforest, logreg]
+    lst_classif_names = ['Dummy', 'Naive Bayes', 'Decision tree', 'Random Forest', 'Logistic regression']
 
-# for clf,name_clf in zip(lst_classif,lst_classif_names):
-#     clf.fit(X_train, y_train)
-#     # TODO
-#     y_pred = 
+    for clf,name_clf in zip(lst_classif,lst_classif_names):
+        clf.fit(X_train, y_train)
+        y_pred = clf.predict(X_test)
 
-#     print('Accuracy of '+name_clf+' classifier on training set: {:.2f}'
-#           .format(clf.score(X_train, y_train)))
-#     print('Accuracy of '+name_clf+' classifier on test set: {:.2f}'
-#      .format(clf.score(X_test, y_test)))
-#     print(confusion_matrix(y_test, y_pred))
+        print('Accuracy of '+name_clf+' classifier on training set: {:.2f}'
+            .format(clf.score(X_train, y_train)))
+        print('Accuracy of '+name_clf+' classifier on test set: {:.2f}'
+        .format(clf.score(X_test, y_test)))
+        print(confusion_matrix(y_test, y_pred))
 
-# # print decision tree
-# from sklearn import tree
-# fig = plt.figure(num=None, figsize=(10, 8), dpi=300)
-# tree.plot_tree(dectree,  
-#                feature_names=feature_names,  
-#                class_names=fruits['fruit_name'].unique(),  
-#                filled=True, rounded=True)
-# plt.savefig('fig/decision_tree')
-# plt.close(fig)
+    # print decision tree
+    fig = plt.figure(num=None, figsize=(10, 8), dpi=300)
+    tree.plot_tree(dectree,  
+                feature_names=feature_names,  
+                class_names=fruits['fruit_name'].unique(),  
+                filled=True, rounded=True)
+    plt.savefig('fig/decision_tree')
+    plt.close(fig)
 
+    for clf,name_clf in zip(lst_classif,lst_classif_names):
+        scores = cross_val_score(clf, X, y, cv=5)
+        print("Accuracy of "+name_clf+" classifier on cross-validation: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() * 2))
 
-# # Supervised learning
-# # cross-validation
-# from sklearn.model_selection import cross_val_score
+    # Parameters selection for Logistic regression model
+    
 
-# for clf,name_clf in zip(lst_classif,lst_classif_names):
-#     # TODO : complete with function cross_val_score
-#     scores = 
-#     print("Accuracy of "+name_clf+" classifier on cross-validation: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() * 2))
-
-# # Parameters selection for Logistic regression model
-# from sklearn.model_selection import GridSearchCV
-
-# parameters={"C":[0.01,0.05,0.1,0.15,1,10],
-#         "penalty":['l2',None]}
-# search = GridSearchCV(LogisticRegression(), parameters, cv=5, verbose=1)
-# # TODO: apply search on data
-# print("Best score: %0.3f" % search.best_score_)
-# print("Best parameters set:")
-# best_parameters = search.best_estimator_.get_params()
-# for param_name in sorted(parameters.keys()):
-#     print("\t%s: %r" % (param_name, best_parameters[param_name]))
+    parameters={"C":[0.01,0.05,0.1,0.15,1,10],
+            "penalty":['l2',None]}
+    search = GridSearchCV(LogisticRegression(), parameters, cv=5, verbose=1)
+    search.fit(X, y)
+    print("Best score: %0.3f" % search.best_score_)
+    print("Best parameters set:")
+    best_parameters = search.best_estimator_.get_params()
+    for param_name in sorted(parameters.keys()):
+        print("\t%s: %r" % (param_name, best_parameters[param_name]))
 
 
 
@@ -291,26 +289,26 @@ elif int(question) == 3:
 #########################################################################
 # 5 - Classement et discrétisation
 
-# list_prefix = ['eqsized_bins_', 'eqintervaled_bins_']
-# nb_bin = 10
-# for prefix in list_prefix:
-#     print("###### Discretization with "+prefix+" ######")
+list_prefix = ['eqsized_bins_', 'eqintervaled_bins_']
+nb_bin = 10
+for prefix in list_prefix:
+    print("###### Discretization with "+prefix+" ######")
     
-#     for attr in feature_names:
-#         if 'sized' in prefix:
-#             fruits[prefix+attr]=pd.qcut(fruits[attr],nb_bin)
-#         else:
-#             fruits[prefix+attr]=pd.cut(fruits[attr],nb_bin)
-#         # use pd.concat to join the new columns with your original dataframe
-#         fruits=pd.concat([fruits,pd.get_dummies(fruits[prefix+attr],prefix=prefix+attr)],axis=1)
-#         # now drop the original column (you don't need it anymore)
-#         fruits.drop(prefix+attr,axis=1, inplace=True)
+    for attr in feature_names:
+        if 'sized' in prefix:
+            fruits[prefix+attr]=pd.qcut(fruits[attr],nb_bin)
+        else:
+            fruits[prefix+attr]=pd.cut(fruits[attr],nb_bin)
+        # use pd.concat to join the new columns with your original dataframe
+        fruits=pd.concat([fruits,pd.get_dummies(fruits[prefix+attr],prefix=prefix+attr)],axis=1)
+        # now drop the original column (you don't need it anymore)
+        fruits.drop(prefix+attr,axis=1, inplace=True)
 
-#     feature_names_bins = filter(lambda x: x.startswith(prefix) and x.endswith(']'), list(fruits))
-#     X_discret = fruits[feature_names_bins]
-#     print(X_discret.head())
+    feature_names_bins = filter(lambda x: x.startswith(prefix) and x.endswith(']'), list(fruits))
+    X_discret = fruits[feature_names_bins]
+    print(X_discret.head())
 
-#     # TODO: compute accuracies using cross validation with the classifiers
+    # TODO: compute accuracies using cross validation with the classifiers
 
 
 
