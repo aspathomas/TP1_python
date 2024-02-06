@@ -2,10 +2,13 @@
 # -*- coding: utf-8 -*-
 
 import pandas as pd
-import matplotlib
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import MinMaxScaler
-import numpy as np
+from mpl_toolkits.mplot3d import Axes3D
+from sklearn.cluster import KMeans
+from R_square_clustering import r_square
+from purity import purity_score
+
 
 # Turn interactive plotting off
 plt.ioff()
@@ -111,107 +114,97 @@ elif int(question) == 22:
 
 #########################################################################
 # 3 - Cluster
+elif int(question) == 3:
+    # Normalize data
+    scaler = MinMaxScaler()
+    feature_names = ['mass', 'width', 'height', 'color_score']
+    X = fruits[feature_names]
+    y = fruits['fruit_label']
+    X_norm = scaler.fit_transform(X)
 
-# # Normalize data
-# scaler = MinMaxScaler()
+    # Plot clusters
+    lst_kmeans = [KMeans(n_clusters=n,n_init='auto') for n in range(3,6)]
+    titles = [str(x)+' clusters' for x in range(3,6)]
+    fignum = 1
+    for kmeans in lst_kmeans:
+        fig = plt.figure(figsize=(8, 6))
+        ax = fig.add_subplot(111, projection='3d')
+        kmeans.fit(X_norm)
+        labels = kmeans.labels_
+        ax.scatter(X['mass'], X['width'], X['color_score'],
+                   c=labels.astype(float), edgecolor='k')
 
-# # TODO
-# X = 
-# y = 
-# X_norm = 
-
-# # kmeans
-# from sklearn.model_selection import train_test_split
-# from mpl_toolkits.mplot3d import Axes3D
-# from sklearn.cluster import KMeans
-
-# # Plot clusters
-# lst_kmeans = [KMeans(n_clusters=n,n_init='auto') for n in range(3,6)]
-# titles = [str(x)+' clusters' for x in range(3,6)]
-# fignum = 1
-# for kmeans in lst_kmeans:
-#     fig = plt.figure(figsize=(8, 6))
-#     ax = Axes3D(fig, rect=[0, 0, .95, 1], elev=48, azim=134)
-#     kmeans.fit(X_norm)
-#     labels = kmeans.labels_
-#     ax.scatter(X['mass'], X['width'], X['color_score'],
-#                c=labels.astype(np.float), edgecolor='k')
-
-#     ax.w_xaxis.set_ticklabels([])
-#     ax.w_yaxis.set_ticklabels([])
-#     ax.w_zaxis.set_ticklabels([])
-#     ax.set_xlabel('mass')
-#     ax.set_ylabel('width')
-#     ax.set_zlabel('color_score')
-#     ax.set_title(titles[fignum - 1])
-#     plt.savefig('fig/k-means_'+str(2+fignum)+'_clusters')
-#     fignum = fignum + 1
-#     plt.close(fig)
-
-# # Plot the ground truth
-# fig = plt.figure(figsize=(8, 6))
-# ax = Axes3D(fig, rect=[0, 0, .95, 1], elev=48, azim=134)
-# for label in fruits['fruit_name'].unique():
-#     ax.text3D(fruits.loc[fruits['fruit_name']==label].mass.mean(),
-#               fruits.loc[fruits['fruit_name']==label].width.mean(),
-#               fruits.loc[fruits['fruit_name']==label].color_score.mean(),
-#               label,
-#               horizontalalignment='center',
-#               bbox=dict(alpha=.2, edgecolor='w', facecolor='w'))
-# ax.scatter(X['mass'], X['width'], X['color_score'], c=y, edgecolor='k')
-# ax.w_xaxis.set_ticklabels([])
-# ax.w_yaxis.set_ticklabels([])
-# ax.w_zaxis.set_ticklabels([])
-# ax.set_xlabel('mass')
-# ax.set_ylabel('width')
-# ax.set_zlabel('color_score')
-# ax.set_title('Ground Truth')
-# plt.savefig('fig/k-means_ground_truth')
-# plt.close(fig)
+        ax.xaxis.set_ticklabels([])
+        ax.yaxis.set_ticklabels([])
+        ax.zaxis.set_ticklabels([])
+        ax.set_xlabel('mass')
+        ax.set_ylabel('width')
+        ax.set_zlabel('color_score')
+        ax.set_title(titles[fignum - 1])
+        plt.savefig('fig/k-means_'+str(2+fignum)+'_clusters')
+        fignum = fignum + 1
+        plt.close(fig)
 
 
-# # Compute R-square, i.e. V_inter/V
-# from R_square_clustering import r_square
-# from purity import purity_score
+    # Plot the ground truth
+    fig = plt.figure(figsize=(8, 6))
+    ax = fig.add_subplot(111, projection='3d')
+    for label in fruits['fruit_name'].unique():
+        ax.text3D(fruits.loc[fruits['fruit_name']==label].mass.mean(),
+                  fruits.loc[fruits['fruit_name']==label].width.mean(),
+                  fruits.loc[fruits['fruit_name']==label].color_score.mean(),
+                  label,
+                  horizontalalignment='center',
+                  bbox=dict(alpha=.2, edgecolor='w', facecolor='w'))
+    ax.scatter(X['mass'], X['width'], X['color_score'], c=y, edgecolor='k')
+    ax.xaxis.set_ticklabels([])
+    ax.yaxis.set_ticklabels([])
+    ax.zaxis.set_ticklabels([])
+    ax.set_xlabel('mass')
+    ax.set_ylabel('width')
+    ax.set_zlabel('color_score')
+    ax.set_title('Ground Truth')
+    plt.savefig('fig/k-means_ground_truth')
+    plt.close(fig)
 
-# # Plot elbow graphs for KMeans using R square and purity scores
-# lst_k=range(2,11)
-# lst_rsq = []
-# lst_purity = []
-# for k in lst_k:
-#     est=KMeans(n_clusters=k,n_init='auto')
-#     est.fit(X_norm)
-#     lst_rsq.append(r_square(X_norm, est.cluster_centers_,est.labels_,k))
-#     # TODO: complete lst_purity
-    
-# fig = plt.figure()
-# plt.plot(lst_k, lst_rsq, 'bx-')
-# plt.plot(lst_k, lst_purity, 'rx-')
-# plt.xlabel('k')
-# plt.ylabel('RSQ/purity score')
-# plt.title('The Elbow Method showing the optimal k')
-# plt.savefig('fig/k-means_elbow_method')
-# plt.close()
-    
+    # Plot elbow graphs for KMeans using R square and purity scores
+    lst_k=range(2,11)
+    lst_rsq = []
+    lst_purity = []
+    for k in lst_k:
+        est=KMeans(n_clusters=k,n_init='auto')
+        est.fit(X_norm)
+        lst_rsq.append(r_square(X_norm, est.cluster_centers_,est.labels_,k))
+        lst_purity.append(purity_score(y, est.labels_))
+
+    fig = plt.figure()
+    plt.plot(lst_k, lst_rsq, 'bx-')
+    plt.plot(lst_k, lst_purity, 'rx-')
+    plt.xlabel('k')
+    plt.ylabel('RSQ/purity score')
+    plt.title('The Elbow Method showing the optimal k')
+    plt.savefig('fig/k-means_elbow_method')
+    plt.close()
+        
 
 
-# # hierarchical clustering
-# from scipy.cluster.hierarchy import dendrogram, linkage
+    # hierarchical clustering
+    from scipy.cluster.hierarchy import dendrogram, linkage
 
-# lst_labels = list(map(lambda pair: pair[0]+str(pair[1]), zip(fruits['fruit_name'].values,fruits.index)))
-# linkage_matrix = linkage(X_norm, 'ward')
-# fig = plt.figure()
-# dendrogram(
-#     linkage_matrix,
-#     color_threshold=0,
-#     labels=lst_labels
-# )
-# plt.title('Hierarchical Clustering Dendrogram (Ward)')
-# plt.xlabel('sample index')
-# plt.ylabel('distance')
-# plt.tight_layout()
-# plt.savefig('fig/hierarchical-clustering')
-# plt.close()
+    lst_labels = list(map(lambda pair: pair[0]+str(pair[1]), zip(fruits['fruit_name'].values,fruits.index)))
+    linkage_matrix = linkage(X_norm, 'ward')
+    fig = plt.figure()
+    dendrogram(
+        linkage_matrix,
+        color_threshold=0,
+        labels=lst_labels
+    )
+    plt.title('Hierarchical Clustering Dendrogram (Ward)')
+    plt.xlabel('sample index')
+    plt.ylabel('distance')
+    plt.tight_layout()
+    plt.savefig('fig/hierarchical-clustering')
+    plt.close()
 
 
 #########################################################################
