@@ -4,6 +4,7 @@
 import pandas as pd
 import matplotlib
 import matplotlib.pyplot as plt
+from sklearn.preprocessing import MinMaxScaler
 import numpy as np
 
 # Turn interactive plotting off
@@ -57,22 +58,54 @@ if int(question) == 1:
 #########################################################################
 # 2 - Prétraitement
 
-# attr='mass'
+elif int(question) == 2:
+    
+    # Attribut à analyser
+    attr = 'mass'
 
-# # discretize with equal-intervaled bins
-# fig = plt.figure()
-# plt.subplot(211)
-# matplotlib.pyplot.xticks(fontsize=6)
-# pd.cut(fruits[attr],10).value_counts(sort=False).plot.bar()
-# plt.xticks(rotation=25)
-# # discretize with equal-sized bins
-# plt.subplot(212)
-# matplotlib.pyplot.xticks(fontsize=6)
-# # TODO: plot with qcut
-# plt.xticks(rotation=25)
-# plt.suptitle('Histogram for '+attr+' discretized with equal-intervaled and equal-sized bins')
-# plt.savefig('fig/'+attr+'_histogram_discretization')
-# plt.close(fig)
+    # Discrétisation avec des intervalles égaux
+    fig = plt.figure(figsize=(10, 8))
+    plt.subplot(211)
+    plt.xticks(fontsize=6)
+    pd.cut(fruits[attr], 10).value_counts(sort=False).plot.bar()
+    plt.xticks(rotation=25)
+    plt.title('Equal-intervaled bins for ' + attr)
+    plt.xlabel(attr)
+    plt.ylabel('Frequency')
+
+    # Discrétisation avec des bins de même effectif
+    plt.subplot(212)
+    plt.xticks(fontsize=6)
+    pd.qcut(fruits[attr], 10).value_counts(sort=False).plot.bar()
+    plt.xticks(rotation=25)
+    plt.title('Equal-sized bins for ' + attr)
+    plt.xlabel(attr)
+    plt.ylabel('Frequency')
+
+    plt.suptitle('Histograms for ' + attr + ' discretized with equal-intervaled and equal-sized bins')
+    plt.tight_layout()
+    plt.savefig('fig/' + attr + '_histogram_discretization.png')
+    plt.show()
+    
+elif int(question) == 22:
+
+    feature_names = ['mass', 'width', 'height', 'color_score']
+    X = fruits[feature_names]
+
+    # Créez un scaler MinMax
+    scaler = MinMaxScaler()
+
+    # Appliquez la normalisation
+    normalized_data = scaler.fit_transform(X)
+    
+    # Convertir le tableau NumPy en DataFrame
+    normalized_X = pd.DataFrame(normalized_data, columns=[feature_names])
+
+    # Affichez les statistiques après normalisation
+    print("Avant normalisation:")
+    print(X.describe())
+    print("\nAprès normalisation:")
+    print(normalized_X.describe())
 
 
 
