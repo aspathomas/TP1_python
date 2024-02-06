@@ -46,10 +46,10 @@ print(fruits.groupby('fruit_name').size())
 
 print('Donner le numéro de la question voulue : ')
 question = input()
+feature_names = ['mass', 'width', 'height', 'color_score']
 
 if int(question) == 1:
     # plot correlation between attributes w.r.t. classification
-    feature_names = ['mass', 'width', 'height', 'color_score']
     X = fruits[feature_names]
     y = fruits['fruit_label']
 
@@ -103,7 +103,6 @@ elif int(question) == 2:
     
 elif int(question) == 22:
 
-    feature_names = ['mass', 'width', 'height', 'color_score']
     X = fruits[feature_names]
 
     # Créez un scaler MinMax
@@ -128,7 +127,6 @@ elif int(question) == 22:
 elif int(question) == 3:
     # Normalize data
     scaler = MinMaxScaler()
-    feature_names = ['mass', 'width', 'height', 'color_score']
     X = fruits[feature_names]
     y = fruits['fruit_label']
     X_norm = scaler.fit_transform(X)
@@ -222,7 +220,6 @@ elif int(question) == 3:
 # 4 - Classement
 elif int(question) == 4:
 
-    feature_names = ['mass', 'width', 'height', 'color_score']
     X = fruits[feature_names]
     y = fruits['fruit_label']
 
@@ -288,28 +285,41 @@ elif int(question) == 4:
 
 #########################################################################
 # 5 - Classement et discrétisation
+elif int(question) == 5:
+    list_prefix = ['eqsized_bins_', 'eqintervaled_bins_']
+    nb_bin = 10
 
-list_prefix = ['eqsized_bins_', 'eqintervaled_bins_']
-nb_bin = 10
-for prefix in list_prefix:
-    print("###### Discretization with "+prefix+" ######")
-    
-    for attr in feature_names:
-        if 'sized' in prefix:
-            fruits[prefix+attr]=pd.qcut(fruits[attr],nb_bin)
-        else:
-            fruits[prefix+attr]=pd.cut(fruits[attr],nb_bin)
-        # use pd.concat to join the new columns with your original dataframe
-        fruits=pd.concat([fruits,pd.get_dummies(fruits[prefix+attr],prefix=prefix+attr)],axis=1)
-        # now drop the original column (you don't need it anymore)
-        fruits.drop(prefix+attr,axis=1, inplace=True)
+    for prefix in list_prefix:
+        print("###### Discretization with " + prefix + " ######")
+        
+        for attr in feature_names:
+            if 'sized' in prefix:
+                fruits[prefix + attr] = pd.qcut(fruits[attr], nb_bin)
+            else:
+                fruits[prefix + attr] = pd.cut(fruits[attr], nb_bin)
+            
+            # use pd.concat to join the new columns with your original dataframe
+            fruits = pd.concat([fruits, pd.get_dummies(fruits[prefix + attr], prefix=prefix + attr)], axis=1)
+            
+            # now drop the original column (you don't need it anymore)
+            fruits.drop(prefix + attr, axis=1, inplace=True)
 
-    feature_names_bins = filter(lambda x: x.startswith(prefix) and x.endswith(']'), list(fruits))
-    X_discret = fruits[feature_names_bins]
-    print(X_discret.head())
+        feature_names_bins = [col for col in fruits.columns if col.startswith(prefix) and col.endswith(']')]
+        X_discret = fruits[feature_names_bins]
+        y_discret = fruits['fruit_label']  # Assuming 'fruit_label' is your target variable
 
-    # TODO: compute accuracies using cross validation with the classifiers
+        dummycl = DummyClassifier(strategy="most_frequent")
+        gmb = GaussianNB()
+        dectree = tree.DecisionTreeClassifier()
+        rdforest = RandomForestClassifier()
+        logreg = LogisticRegression()
 
+        lst_classif = [dummycl, gmb, dectree, rdforest, logreg]
+        lst_classif_names = ['Dummy', 'Naive Bayes', 'Decision tree', 'Random Forest', 'Logistic regression']
+        # Compute accuracies using cross-validation with the classifiers
+        for clf, name_clf in zip(lst_classif, lst_classif_names):
+            scores = cross_val_score(clf, X_discret, y_discret, cv=5)
+            print("Accuracy of " + name_clf + " classifier on discretized data with " + prefix + ": %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() * 2))
 
 
 
