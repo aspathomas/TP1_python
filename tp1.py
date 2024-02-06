@@ -17,33 +17,40 @@ fruits = pd.read_table('data/fruit_data_with_colors.txt')
 print(fruits.head())
 
 # print nb of instances and features
+print("nombre d'instance : ")
 print(fruits.shape)
 
 # print feature types
+print("fruit dtype : ")
 print(fruits.dtypes)
 
+
 # print balance between classes
+print("nombre d'occurences : ")
 print(fruits.groupby('fruit_name').size())
 
-# plot correlation between attributes w.r.t. classification
-feature_names = ['mass', 'width', 'height', 'color_score']
-X = fruits[feature_names]
-# TODO
-# y = 
+print('Donner le numéro de la question voulue : ')
+question = input()
 
-# fig = plt.figure()
-# scatter = pd.plotting.scatter_matrix(X, c = y, marker = 'o', s=40, hist_kwds={'bins':15}, figsize=(9,9))
-# plt.suptitle('Scatter-matrix for each input variable')
-# plt.savefig('fig/fruits_scatter_matrix')
-# plt.close(fig)
+if int(question) == 1:
+    # plot correlation between attributes w.r.t. classification
+    feature_names = ['mass', 'width', 'height', 'color_score']
+    X = fruits[feature_names]
+    y = fruits['fruit_label']
 
-# # print histogram for each attribute with belonging to classes
-# for attr in feature_names:
-#     fig = plt.figure()
-#     pd.DataFrame({k: v for k, v in fruits.groupby('fruit_name')[attr]}).plot.hist(stacked=True)
-#     plt.suptitle(attr)
-#     plt.savefig('fig/fruits_histogram_'+attr)
-#     plt.close(fig)
+    fig = plt.figure()
+    scatter = pd.plotting.scatter_matrix(X, c=y, marker='o', s=40, hist_kwds={'bins': 15}, figsize=(9, 9))
+    plt.suptitle('Scatter-matrix for each input variable')
+    plt.savefig('fig/fruits_scatter_matrix')
+    plt.close(fig)
+
+    # Print histogram for each attribute with belonging to classes
+    for attr in feature_names:
+        fig = plt.figure()
+        pd.DataFrame({k: v[attr] for k, v in fruits.groupby('fruit_name')}).plot.hist(stacked=True)
+        plt.suptitle(attr)
+        plt.savefig('fig/fruits_histogram_' + attr)
+        plt.close(fig)
 
 
 
