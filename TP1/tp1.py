@@ -210,7 +210,7 @@ dummycl = DummyClassifier(strategy="most_frequent")
 gmb = GaussianNB()
 dectree = tree.DecisionTreeClassifier()
 rdforest = RandomForestClassifier()
-logreg = LogisticRegression()
+logreg = LogisticRegression(max_iter=1000)
 
 lst_classif = [dummycl, gmb, dectree, rdforest, logreg]
 lst_classif_names = ['Dummy', 'Naive Bayes', 'Decision tree', 'Random Forest', 'Logistic regression']
@@ -247,9 +247,9 @@ for clf,name_clf in zip(lst_classif,lst_classif_names):
 # Parameters selection for Logistic regression model
 from sklearn.model_selection import GridSearchCV
 
-parameters={"C":[0.01,0.05,0.1,0.15,1,10],
+parameters={"C":[0.01,0.05,0.1,0.15,1,10,50,100],
         "penalty":['l2',None]}
-search = GridSearchCV(LogisticRegression(), parameters, cv=5, verbose=1)
+search = GridSearchCV(LogisticRegression(max_iter=1000), parameters, cv=5, verbose=1)
 search.fit(X, y)
 print("Best score: %0.3f" % search.best_score_)
 print("Best parameters set:")
@@ -306,14 +306,17 @@ X_standard = scaler.fit_transform(X)
 acp = PCA(svd_solver='full')
 coord = acp.fit_transform(X_standard)
 # nb of computed components
-print(acp.n_components_) 
-
+print("###### ACP ######")
+print("acp.n_components_ : ", acp.n_components_) 
+print("\n")
 
 # explained variance scores
 exp_var_pca = acp.explained_variance_ratio_
+print("exp_var_pca")
 print(exp_var_pca)
-
-
+print("\n")
+print("acp.explained_variance_")
+print(acp.explained_variance_)
 #
 # Cumulative sum of explained variance values; This will be used to
 # create step plot for visualizing the variance explained by each
