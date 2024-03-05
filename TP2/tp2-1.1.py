@@ -10,7 +10,7 @@ import numpy as np
 plt.ioff()
 
 # # read input text and put data inside a data frame
-# worldDev = 
+worldDev = pd.read_csv('Data_World_Development_Indicators2.csv')
 
 
 
