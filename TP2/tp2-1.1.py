@@ -7,6 +7,10 @@ import numpy as np
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
+from sklearn.cluster import KMeans
+from sklearn.metrics import silhouette_score
+from scipy.cluster.hierarchy import dendrogram, linkage
+
 
 # Turn interactive plotting off
 plt.ioff()
@@ -32,11 +36,11 @@ if not missing_values_non_zero.empty:
 
     # Remplacer les valeurs manquantes par la médiane
     imputer = SimpleImputer(strategy='median')
-    worldDev = pd.DataFrame(imputer.fit_transform(worldDev[numeric_columns]), columns=numeric_columns)
+    worldDev_numeric = pd.DataFrame(imputer.fit_transform(worldDev[numeric_columns]), columns=numeric_columns)
 
 # Appliquer StandardScaler
 scaler = StandardScaler()
-worldDev = pd.DataFrame(scaler.fit_transform(worldDev[numeric_columns]), columns=numeric_columns)
+worldDev_numeric = pd.DataFrame(scaler.fit_transform(worldDev_numeric[numeric_columns]), columns=numeric_columns)
 
 # plot instances on the first plan (first 2 factors) or 2nd plan
 def plot_instances_acp(coord,df_labels,x_axis,y_axis, name):
@@ -53,7 +57,7 @@ def plot_instances_acp(coord,df_labels,x_axis,y_axis, name):
 # coord: results of the PCA 
 # Appliquer l'ACP
 pca = PCA()
-acp = pca.fit_transform(worldDev)
+acp = pca.fit_transform(worldDev_numeric)
 
 # Créer un DataFrame avec les deux premiers composants principaux
 pca_df_2d = pd.DataFrame(data=acp[:, :2], columns=['PC1', 'PC2'])
@@ -105,16 +109,68 @@ def correlation_circle(components,var_names,x_axis,y_axis):
 correlation_circle(loadings, worldDev.columns, 0, 1)
 
 
+# Question 6
+# Liste pour stocker les valeurs de coefficient R2
+r2_scores = []
+
+# Faire varier le nombre de clusters (k) de 2 à 20
+for k in range(2, 21):
+    # Effectuer le clustering avec KMeans
+    kmeans = KMeans(n_clusters=k, random_state=42)
+    kmeans.fit(worldDev_numeric)
+    
+    # Calculer le coefficient R2 (score silhouette)
+    silhouette_avg = silhouette_score(worldDev_numeric, kmeans.labels_)
+    r2_scores.append(silhouette_avg)
+
+print(r2_scores)
+# Tracer la variation du coefficient R2 en fonction de k
+plt.figure(figsize=(10, 6))
+plt.plot(range(2, 21), r2_scores, marker='o', linestyle='-')
+plt.title('Variation du coefficient R2 en fonction de k')
+plt.xlabel('Nombre de clusters (k)')
+plt.ylabel('Coefficient R2')
+plt.xticks(np.arange(2, 21, step=1))
+plt.grid(True)
+plt.savefig('fig/varition_R2')
+
+#Question 7
+# Fixer le nombre de clusters à 8
+k = 8
+
+# Effectuer le clustering avec KMeans
+kmeans = KMeans(n_clusters=k, random_state=42)
+kmeans.fit(worldDev_numeric)
+
+# Identifier les indices des pays dans le dataframe original
+france_index = worldDev.index[worldDev['Country Name'] == 'France'][0]
+mexico_index = worldDev.index[worldDev['Country Name'] == 'Mexico'][0]
+bulgaria_index = worldDev.index[worldDev['Country Name'] == 'Bulgaria'][0]
+
+# Identifier les clusters auxquels appartiennent la France, le Mexique et la Bulgarie
+france_cluster = kmeans.labels_[france_index]
+mexico_cluster = kmeans.labels_[mexico_index]
+bulgaria_cluster = kmeans.labels_[bulgaria_index]
+
+# Afficher les profils des groupes contenant la France, le Mexique et la Bulgarie
+group_france = worldDev[kmeans.labels_ == france_cluster]
+group_mexico = worldDev[kmeans.labels_ == mexico_cluster]
+group_bulgaria = worldDev[kmeans.labels_ == bulgaria_cluster]
 
 
-# print centroids associated with several countries
-lst_countries=[]
-# centroid of the entire dataset
-# est: KMeans model fit to the dataset
-print(est.cluster_centers_)
-for name in lst_countries:
-    num_cluster = est.labels_[y.loc[y==name].index][0]
-    print('Num cluster for '+name+': '+str(num_cluster))
-    print('\tlist of countries: '+', '.join(y.iloc[np.where(est.labels_==num_cluster)].values))
-    print('\tcentroid: '+str(est.cluster_centers_[num_cluster]))
+# Concatenate the DataFrames for France, Mexico, and Bulgaria
+group_stats = pd.concat([group_france.describe(), group_mexico.describe(), group_bulgaria.describe()], axis=0)
 
+# Save the concatenated DataFrame to a CSV file
+group_stats.to_csv('fig/group_statistics.csv', sep=';', decimal=',')
+
+# Calculer la matrice de liaison avec la méthode de liaison choisie (par exemple, 'ward')
+Z = linkage(worldDev_numeric, method='ward')
+
+# Afficher le dendrogramme
+plt.figure(figsize=(12, 8))
+dendrogram(Z)
+plt.title('Dendrogramme Hiérarchique Ascendant')
+plt.xlabel('Indices des Échantillons')
+plt.ylabel('Distance Euclidienne')
+plt.savefig('fig/dendrogramme')

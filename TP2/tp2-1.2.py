@@ -12,7 +12,7 @@ import csv
 
 # read input data
 dataset = []
-with open('data/grocery.csv', 'r') as read_obj: 
+with open('grocery.csv', 'r') as read_obj: 
     csv_reader = csv.reader(read_obj) 
     list_of_csv = list(csv_reader) 
     # remove header
