@@ -16,7 +16,7 @@ from scipy.cluster.hierarchy import dendrogram, linkage
 plt.ioff()
 
 # # read input text and put data inside a data frame
-worldDev = pd.read_csv('Data_World_Development_Indicators2.csv')
+worldDev = pd.read_csv('data/Data_World_Development_Indicators2.csv')
 
 num_attributes = worldDev.shape[1]
 print(f"Il y a {num_attributes} attributs.")
@@ -61,19 +61,23 @@ acp = pca.fit_transform(worldDev_numeric)
 
 # Créer un DataFrame avec les deux premiers composants principaux
 pca_df_2d = pd.DataFrame(data=acp[:, :2], columns=['PC1', 'PC2'])
-
+0
 # Créer un DataFrame avec les troisième et quatrième composants principaux
 pca_df_3d = pd.DataFrame(data=acp[:, 2:4], columns=['PC3', 'PC4'])
 
 plot_instances_acp(pca_df_2d, country_codes, 0, 1, "1_2")
 plot_instances_acp(pca_df_3d, country_codes, 0, 1, "3_4")
 
+for i in range(len(country_codes.index)):
+        print("pays: ", country_codes.values[i], " ACP_0: ",pca_df_2d.iloc[i,0]," ACP_1: ", pca_df_2d.iloc[i,1])
+
+for i in range(len(country_codes.index)):
+        print("pays: ", country_codes.values[i], " ACP_2: ",pca_df_3d.iloc[i,0]," ACP_3: ", pca_df_3d.iloc[i,1])
 
 
 
 # compute correlations between factors and original variables
 loadings = pca.components_.T * np.sqrt(pca.explained_variance_)
-
 # plot correlation_circles
 def correlation_circle(components,var_names,x_axis,y_axis):
     fig, axes = plt.subplots(figsize=(8,8))
@@ -97,6 +101,7 @@ def correlation_circle(components,var_names,x_axis,y_axis):
                  components[i, y_axis] + 0.05,
                  var_names[i])
     # axes
+    plt.title(f"cercle de corrélation {x_axis} et {y_axis} facteurs acp")
     plt.plot([minx,maxx],[0,0],color='silver',linestyle='-',linewidth=1)
     plt.plot([0,0],[miny,maxy],color='silver',linestyle='-',linewidth=1)
     # add a circle
@@ -105,8 +110,8 @@ def correlation_circle(components,var_names,x_axis,y_axis):
     plt.savefig('fig/acp_correlation_circle_axes_'+str(x_axis)+'_'+str(y_axis))
     plt.close(fig)
 
-# ignore 1st 2 columns: country and country_code
 correlation_circle(loadings, worldDev.columns, 0, 1)
+correlation_circle(loadings, worldDev.columns, 2, 3)
 
 
 # Question 6
